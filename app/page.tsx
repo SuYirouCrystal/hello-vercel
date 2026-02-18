@@ -9,12 +9,17 @@ export default function Home() {
 
         <p className="hero-sub">
           A minimal Next.js demo with a protected route and Google OAuth (via
-          Supabase). Click below to view the allowed signup domains.
+          Supabase). Click below to view the allowed signup domains or vote on captions.
         </p>
 
-        <Link href="/domains" className="cta-link">
-          View allowed signup domains
-        </Link>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <Link href="/domains" className="cta-link">
+            View allowed signup domains
+          </Link>
+          <Link href="/captions" className="cta-link">
+            Vote on captions
+          </Link>
+        </div>
       </div>
     </main>
   );
