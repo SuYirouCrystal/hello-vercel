@@ -53,6 +53,12 @@ export default function DomainsPage() {
   }, [router]);
 
   const signIn = async () => {
+    try {
+      window.localStorage.setItem("postAuthRedirect", "/domains");
+    } catch {
+      // ignore storage errors
+    }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

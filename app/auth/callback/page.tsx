@@ -4,6 +4,22 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
+function consumePostAuthRedirect(): string {
+  let target = "/domains";
+
+  try {
+    const saved = window.localStorage.getItem("postAuthRedirect");
+    if (saved && saved.startsWith("/")) {
+      target = saved;
+    }
+    window.localStorage.removeItem("postAuthRedirect");
+  } catch {
+    // ignore storage read errors and use default
+  }
+
+  return target;
+}
+
 export default function AuthCallbackPage() {
   const router = useRouter();
   const [status, setStatus] = useState("Processing sign-in...");
@@ -13,12 +29,29 @@ export default function AuthCallbackPage() {
 
     async function handle() {
       try {
+        const redirectTarget = consumePostAuthRedirect();
+
         // First, check if the client already has a session
         const { data: sessionData } = await supabase.auth.getSession();
         if (sessionData.session) {
           if (!mounted) return;
           setStatus("Sign-in successful, redirecting...");
-          router.replace("/domains");
+          router.replace(redirectTarget);
+          return;
+        }
+
+        // If no session, try PKCE code exchange (query param flow)
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) {
+            throw exchangeError;
+          }
+
+          if (!mounted) return;
+          setStatus("Sign-in successful, redirecting...");
+          router.replace(redirectTarget);
           return;
         }
 
@@ -39,14 +72,14 @@ export default function AuthCallbackPage() {
 
           if (!mounted) return;
           setStatus("Sign-in successful, redirecting...");
-          router.replace("/domains");
+          router.replace(redirectTarget);
           return;
         }
 
         // No session could be recovered
         if (!mounted) return;
         setStatus("Sign-in failed: no session found in URL.");
-      } catch (err: any) {
+      } catch (err) {
         console.error("auth callback error", err);
         if (!mounted) return;
         setStatus("Sign-in failed. Check console for details.");

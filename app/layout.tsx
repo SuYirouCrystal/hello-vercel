@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 import ThemeToggle from "./components/ThemeToggle";
 
@@ -28,7 +29,23 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div style={{ position: "fixed", right: 12, top: 12, zIndex: 80 }}>
+        <header className="top-bar">
+          <nav className="top-bar-nav" aria-label="Primary">
+            <Link href="/" className="top-bar-link">
+              Home
+            </Link>
+            <Link href="/domains" className="top-bar-link">
+              Domains
+            </Link>
+            <Link href="/captions" className="top-bar-link">
+              Captions
+            </Link>
+            <Link href="/generate-captions" className="top-bar-link">
+              Generate Captions
+            </Link>
+          </nav>
+        </header>
+        <div className="theme-toggle-float">
           <ThemeToggle />
         </div>
         {children}

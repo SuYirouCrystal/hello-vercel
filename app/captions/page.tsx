@@ -135,6 +135,12 @@ export default function CaptionsPage() {
   };
 
   const signIn = () => {
+    try {
+      window.localStorage.setItem("postAuthRedirect", "/captions");
+    } catch {
+      // ignore storage errors
+    }
+
     supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
