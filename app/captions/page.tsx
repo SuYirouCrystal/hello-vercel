@@ -83,6 +83,7 @@ export default function CaptionsPage() {
       return;
     }
 
+    const actorId = session.user.id;
     setVotingId(captionId);
     try {
       // Check if the user already has a vote for this caption
@@ -90,7 +91,7 @@ export default function CaptionsPage() {
         .from("caption_votes")
         .select("id, vote_value")
         .eq("caption_id", captionId)
-        .eq("profile_id", session.user.id)
+        .eq("profile_id", actorId)
         .limit(1)
         .maybeSingle();
 
@@ -100,10 +101,17 @@ export default function CaptionsPage() {
 
       if (existingData && existingData.id) {
         // Update existing vote
-        await supabase
+        const { error: updateError } = await supabase
           .from("caption_votes")
-          .update({ vote_value: voteValue })
+          .update({
+            vote_value: voteValue,
+            modified_by_user_id: actorId,
+          })
           .eq("id", existingData.id);
+
+        if (updateError) {
+          throw updateError;
+        }
 
         // Update totals by removing old value and adding new
         setCaptionTotals((prev) => ({
@@ -112,11 +120,17 @@ export default function CaptionsPage() {
         }));
       } else {
         // Insert new vote
-        await supabase.from("caption_votes").insert({
+        const { error: insertError } = await supabase.from("caption_votes").insert({
           caption_id: captionId,
-          profile_id: session.user.id,
+          profile_id: actorId,
           vote_value: voteValue,
+          created_by_user_id: actorId,
+          modified_by_user_id: actorId,
         });
+
+        if (insertError) {
+          throw insertError;
+        }
 
         // Add to totals
         setCaptionTotals((prev) => ({
